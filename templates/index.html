@@ -80,6 +80,26 @@
                 </button>
             </div>
 
+            <!-- Live Multi-Agent Progress & Background Activity Tracker -->
+            <div id="progressContainer" class="progress-container hidden">
+                <div class="progress-header">
+                    <div class="progress-status-wrap">
+                        <span class="pulse-indicator"></span>
+                        <span id="progressStatus" class="progress-status">Initializing Multi-Agent Workflow...</span>
+                    </div>
+                    <span id="progressPercent" class="progress-percent">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div id="progressBar" class="progress-bar-fill" style="width: 0%"></div>
+                </div>
+                <div class="agent-steps">
+                    <span id="step-flight" class="agent-step-badge">✈️ Flight Agent</span>
+                    <span id="step-hotel" class="agent-step-badge">🏨 Hotel Discovery</span>
+                    <span id="step-itinerary" class="agent-step-badge">🗺️ Itinerary Planner</span>
+                    <span id="step-final" class="agent-step-badge">✨ Final Synthesis</span>
+                </div>
+            </div>
+
         </section>
 
         <section id="resultSection" class="result-section hidden">

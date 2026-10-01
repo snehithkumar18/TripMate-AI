@@ -417,6 +417,123 @@ footer {
     }
 }
 
+/* =========================================
+   Live Multi-Agent Progress Indicator
+   ========================================= */
+
+.progress-container {
+    margin-top: 24px;
+    padding: 22px 24px;
+    background: rgba(2, 6, 23, 0.75);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 20px;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), 0 0 20px rgba(56, 189, 248, 0.12);
+    backdrop-filter: blur(12px);
+    transition: all 0.3s ease;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.progress-status-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pulse-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #38bdf8;
+    box-shadow: 0 0 12px #38bdf8;
+    animation: pulseGlow 1.2s infinite ease-in-out;
+    flex-shrink: 0;
+}
+
+@keyframes pulseGlow {
+    0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 14px #38bdf8; }
+    50% { opacity: 0.35; transform: scale(0.85); box-shadow: 0 0 4px #38bdf8; }
+}
+
+.progress-status {
+    color: #e2e8f0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.progress-percent {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #38bdf8;
+    min-width: 52px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.progress-bar-bg {
+    width: 100%;
+    height: 10px;
+    background: rgba(30, 41, 59, 0.8);
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #2563eb, #38bdf8, #8b5cf6, #10b981);
+    background-size: 200% 100%;
+    animation: gradientFlow 2s linear infinite;
+    border-radius: 999px;
+    transition: width 0.4s ease-out;
+}
+
+@keyframes gradientFlow {
+    0% { background-position: 100% 0%; }
+    100% { background-position: -100% 0%; }
+}
+
+.agent-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.agent-step-badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(30, 41, 59, 0.55);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #94a3b8;
+    transition: all 0.3s ease;
+}
+
+.agent-step-badge.active {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: rgba(56, 189, 248, 0.7);
+    color: #bae6fd;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+    transform: translateY(-1px);
+}
+
+.agent-step-badge.completed {
+    background: rgba(16, 185, 129, 0.18);
+    border-color: rgba(16, 185, 129, 0.6);
+    color: #a7f3d0;
+}
+
 @media print {
     body {
         background: #ffffff;

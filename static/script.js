@@ -58,6 +58,110 @@ function showResult(answer, threadId) {
     });
 }
 
+let progressInterval = null;
+let currentProgress = 0;
+
+function startProgress() {
+    const container = document.getElementById("progressContainer");
+    const bar = document.getElementById("progressBar");
+    const percent = document.getElementById("progressPercent");
+    const status = document.getElementById("progressStatus");
+
+    const stepFlight = document.getElementById("step-flight");
+    const stepHotel = document.getElementById("step-hotel");
+    const stepItinerary = document.getElementById("step-itinerary");
+    const stepFinal = document.getElementById("step-final");
+
+    // Reset badges
+    [stepFlight, stepHotel, stepItinerary, stepFinal].forEach(el => {
+        if (el) el.className = "agent-step-badge";
+    });
+
+    currentProgress = 0;
+    bar.style.width = "0%";
+    percent.textContent = "0%";
+    status.textContent = "🛫 Agent 1/4: Analyzing route & searching flights...";
+    if (stepFlight) stepFlight.classList.add("active");
+
+    container.classList.remove("hidden");
+
+    const startTime = Date.now();
+
+    if (progressInterval) clearInterval(progressInterval);
+
+    progressInterval = setInterval(() => {
+        const elapsed = (Date.now() - startTime) / 1000;
+        let target = 0;
+        let message = "";
+
+        if (elapsed < 3) {
+            // Stage 1: Flight Agent (0% - 25%)
+            target = Math.min(25, Math.floor(elapsed * 8.3));
+            message = "🛫 Agent 1/4: Analyzing route & searching live flights (AviationStack)...";
+            if (stepFlight) stepFlight.className = "agent-step-badge active";
+        } else if (elapsed < 6.5) {
+            // Stage 2: Hotel Agent (25% - 50%)
+            target = Math.min(50, 25 + Math.floor((elapsed - 3) * 7.1));
+            message = "🏨 Agent 2/4: Discovering top hotels, rooms & locations (Tavily AI)...";
+            if (stepFlight) stepFlight.className = "agent-step-badge completed";
+            if (stepHotel) stepHotel.className = "agent-step-badge active";
+        } else if (elapsed < 11.5) {
+            // Stage 3: Itinerary Agent (50% - 75%)
+            target = Math.min(75, 50 + Math.floor((elapsed - 6.5) * 5.0));
+            message = "🗺️ Agent 3/4: Synthesizing day-by-day itinerary & budgeting (Groq LLM)...";
+            if (stepHotel) stepHotel.className = "agent-step-badge completed";
+            if (stepItinerary) stepItinerary.className = "agent-step-badge active";
+        } else if (elapsed < 16) {
+            // Stage 4: Final Synthesis Agent (75% - 95%)
+            target = Math.min(95, 75 + Math.floor((elapsed - 11.5) * 4.4));
+            message = "✨ Agent 4/4: Polishing final report, recommendations & formatting...";
+            if (stepItinerary) stepItinerary.className = "agent-step-badge completed";
+            if (stepFinal) stepFinal.className = "agent-step-badge active";
+        } else {
+            // Stage 5: Finalizing (95% - 98%)
+            target = Math.min(98, 95 + Math.floor((elapsed - 16) * 0.5));
+            message = "🎉 Finalizing: Assembling your complete travel plan...";
+            if (stepFinal) stepFinal.className = "agent-step-badge active";
+        }
+
+        if (currentProgress < target) {
+            currentProgress = target;
+        }
+
+        bar.style.width = `${currentProgress}%`;
+        percent.textContent = `${currentProgress}%`;
+        status.textContent = message;
+    }, 180);
+}
+
+function completeProgress(callback) {
+    if (progressInterval) clearInterval(progressInterval);
+
+    const bar = document.getElementById("progressBar");
+    const percent = document.getElementById("progressPercent");
+    const status = document.getElementById("progressStatus");
+    const stepFinal = document.getElementById("step-final");
+
+    if (stepFinal) stepFinal.className = "agent-step-badge completed";
+
+    currentProgress = 100;
+    bar.style.width = "100%";
+    percent.textContent = "100%";
+    status.textContent = "✅ Complete! Your travel plan is ready.";
+
+    setTimeout(() => {
+        const container = document.getElementById("progressContainer");
+        if (container) container.classList.add("hidden");
+        if (callback) callback();
+    }, 600);
+}
+
+function resetProgress() {
+    if (progressInterval) clearInterval(progressInterval);
+    const container = document.getElementById("progressContainer");
+    if (container) container.classList.add("hidden");
+}
+
 async function sendMessage() {
     hideError();
 
@@ -70,6 +174,7 @@ async function sendMessage() {
     }
 
     setLoading(true);
+    startProgress();
 
     try {
         const response = await fetch("/api/travel", {
@@ -92,9 +197,12 @@ async function sendMessage() {
         currentThreadId = data.thread_id;
         localStorage.setItem("travel_thread_id", currentThreadId);
 
-        showResult(data.answer, data.thread_id);
+        completeProgress(() => {
+            showResult(data.answer, data.thread_id);
+        });
 
     } catch (error) {
+        resetProgress();
         showError(error.message);
     } finally {
         setLoading(false);
