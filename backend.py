@@ -12,9 +12,11 @@ import operator
 import uuid
 
 import psycopg
+# pyrefly: ignore [missing-import]
 from psycopg.rows import dict_row
 
 from langgraph.graph import StateGraph, START, END
+# pyrefly: ignore [missing-import]
 from langgraph.checkpoint.postgres import PostgresSaver
 from langchain_core.messages import (
     AnyMessage,
@@ -22,7 +24,7 @@ from langchain_core.messages import (
     AIMessage,
     SystemMessage,
 )
-from langchain_groq import ChatGroq
+from langchain_groq import ChatGroq 
 from tools.tavily_tool import tavily_search
 from tools.flight_tool import search_flights
 
@@ -31,20 +33,19 @@ def get_database_url():
     database_url = os.getenv("DATABASE_URL")
 
     if not database_url:
-        raise ValueError(
-            "DATABASE_URL is missing. Please add your Render PostgreSQL External Database URL to .env"
-        )
+        return None
 
-    if "sslmode=" not in database_url:
+    if "sslmode=" not in database_url and "localhost" not in database_url and "127.0.0.1" not in database_url:
         separator = "&" if "?" in database_url else "?"
         database_url = f"{database_url}{separator}sslmode=require"
 
     return database_url
 
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-if not GROQ_API_KEY:
-    raise ValueError("GROQ_API_KEY is missing. Please add it to your .env file.")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+if not GROQ_API_KEY or GROQ_API_KEY == "your_groq_api_key_here":
+    print("WARNING: GROQ_API_KEY is missing or set to placeholder in .env. Please configure GROQ_API_KEY for LLM travel generation.")
+
 
 
 # =========================
@@ -205,18 +206,28 @@ graph.add_edge("final_agent", END)
 
 
 # =========================
-# PostgreSQL Checkpointer
+# Checkpointer (Postgres or In-Memory)
 # =========================
 DATABASE_URL = get_database_url()
+checkpointer = None
 
-_conn = psycopg.connect(
-    DATABASE_URL,
-    autocommit=True,
-    row_factory=dict_row
-)
+if DATABASE_URL:
+    try:
+        _conn = psycopg.connect(
+            DATABASE_URL,
+            autocommit=True,
+            row_factory=dict_row
+        )
+        checkpointer = PostgresSaver(_conn)
+        checkpointer.setup()
+        print("Using PostgresSaver for state persistence.")
+    except Exception as e:
+        print(f"Warning: Could not connect to PostgreSQL ({e}). Falling back to MemorySaver.")
 
-checkpointer = PostgresSaver(_conn)
-checkpointer.setup()
+if checkpointer is None:
+    from langgraph.checkpoint.memory import MemorySaver
+    checkpointer = MemorySaver()
+    print("Using MemorySaver for in-memory state persistence.")
 
 travel_graph = graph.compile(checkpointer=checkpointer)
 

@@ -2,29 +2,33 @@ from tavily import TavilyClient
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
-
-client = TavilyClient(
-    api_key= os.getenv("TAVILY_API_KEY")
-)
-
 
 def tavily_search(query):
-    response = client.search(
-        query= query,
-        max_results= 5
-    )
+    load_dotenv()
+    api_key = os.getenv("TAVILY_API_KEY")
 
-    results = []
+    if not api_key or api_key == "your_tavily_api_key_here":
+        return "Tavily API key is missing. Hotel search skipped."
 
-    for i, r in enumerate(response["results"], 1):
-        title   = r.get("title", "Unknown")
-        url     = r.get("url", "")
-        snippet = r.get("content", "").strip()
-        # Keep only the first 300 characters to avoid wall-of-text
-        if len(snippet) > 300:
-            snippet = snippet[:300].rsplit(" ", 1)[0] + "..."
+    try:
+        client = TavilyClient(api_key=api_key)
+        response = client.search(
+            query=query,
+            max_results=5
+        )
 
-        results.append(f"{i}. **{title}**\n   {url}\n   {snippet}")
+        results = []
+        for i, r in enumerate(response.get("results", []), 1):
+            title   = r.get("title", "Unknown")
+            url     = r.get("url", "")
+            snippet = r.get("content", "").strip()
+            if len(snippet) > 300:
+                snippet = snippet[:300].rsplit(" ", 1)[0] + "..."
 
-    return "\n\n".join(results)
+            results.append(f"{i}. **{title}**\n   {url}\n   {snippet}")
+
+        return "\n\n".join(results) if results else "No hotel search results found."
+    except Exception as e:
+        print(f"Tavily search error: {e}")
+        return f"Hotel search error: {e}"
+

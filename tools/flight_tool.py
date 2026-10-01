@@ -467,17 +467,17 @@ Arrival:
 
 
 def search_flights(query: str, limit: int = 10):
-    if not API_KEY:
+    api_key = os.getenv("AVIATIONSTACK_API_KEY")
+    if not api_key or api_key == "your_aviationstack_api_key_here":
         return (
-            "Flight API error: AVIATIONSTACK_API_KEY is missing.\n"
-            "Please add this in your .env file:\n"
-            "AVIATIONSTACK_API_KEY=your_api_key_here"
+            "Flight API notice: AVIATIONSTACK_API_KEY is missing or not configured.\n"
+            "Skipping live flight search and providing general itinerary guidance."
         )
 
     dep_iata, arr_iata = parse_route(query)
 
     params = {
-        "access_key": API_KEY,
+        "access_key": api_key,
         "limit": min(limit, 100),
     }
 
