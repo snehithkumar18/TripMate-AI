@@ -52,8 +52,10 @@ if not GROQ_API_KEY or GROQ_API_KEY == "your_groq_api_key_here":
 # LLM
 # =========================
 
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+
 llm = ChatGroq(
-    model="llama-3.3-70b-versatile",
+    model=GROQ_MODEL,
     api_key=GROQ_API_KEY
 )
 
